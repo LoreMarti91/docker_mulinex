@@ -1,0 +1,86 @@
+services:
+  ros2_humble_mulinex:
+    build:
+      context: .
+      dockerfile: DockerFile
+      args:
+        - BASE_IMAGE=osrf/ros
+        - BASE_TAG=jazzy-desktop-full
+        - DISTRO=jazzy
+        - IMAGE_NAME=docker_control_simulation
+        - IMAGE_TAG=0.1
+        - WORKSPACE=docker_client_ws
+
+    container_name: ros2_humble_mulinex_container
+    networks:
+      mulinex_cabled:
+        ipv4_address: 100.100.100.16   # scegli un IP libero nella LAN
+    # network_mode: "host"
+    # Interactive shell settings
+    stdin_open: true
+    tty: true
+    # Network settings
+
+    # Environment variables
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+      - ROS_DOMAIN_ID=28
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      # Shell history
+      - HISTFILE=/home/ros/.bash_history
+      - HISTFILESIZE=10000
+      - RCUTILS_COLORIZED_OUTPUT=1
+      - IGN_VERSION=fortress
+      - IGN_GAZEBO_RESOURCE_PATH=/opt/ros/humble/share/
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all,graphics,display,video,utility,compute
+      - __NV_PRIME_RENDER_OFFLOAD=1
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      
+    privileged: true  # Fixed spelling and removed duplicate
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+      - ~/.bash_history:/home/ros/.bash_history
+      - ./src:/home/ros/docker_client_ws/src
+      - /dev/input:/dev/input
+      - /dev/dri:/dev/dri
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
+
+      
+      
+      
+
+    # Command to source ROS2 environment and start shell
+    command: >
+      bash -c "
+        source /opt/ros/humble/setup.bash &&
+        echo 'ROS2 Humble environment loaded' &&
+        bash
+      "
+    # devices:
+    #   - /dev/dri:/dev/dri
+    #   - /dev/nvidia0:/dev/nvidia0
+    #   - /dev/nvidiactl:/dev/nvidiactl
+    #   - /dev/nvidia-modeset:/dev/nvidia-modeset
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  mulinex_cabled:
+    driver: macvlan
+    driver_opts:
+      parent: enp2s0  # Change to your network interface
+    ipam:
+      config:
+        - subnet: 100.100.100.0/24
