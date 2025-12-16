@@ -12,10 +12,12 @@ services:
         - WORKSPACE=docker_client_ws
 
     container_name: ros2_humble_mulinex_container
-    networks:
-      mulinex_cabled:
-        ipv4_address: 100.100.100.16   # scegli un IP libero nella LAN
-    # network_mode: "host"
+    # networks:
+      # mulinex_cabled:
+      #   ipv4_address: 100.100.100.16   # scegli un IP libero nella LAN
+      # mulinex_wifi:
+      #   ipv4_address: 192.168.88.31   # scegli un IP libero nella LAN
+    network_mode: "host"
     # Interactive shell settings
     stdin_open: true
     tty: true
@@ -84,3 +86,10 @@ networks:
     ipam:
       config:
         - subnet: 100.100.100.0/24
+  mulinex_wifi:
+    driver: macvlan
+    driver_opts:
+      parent: wlp0s20f3  # Change to your network interface
+    ipam:
+      config:
+        - subnet: 192.168.88.0/24

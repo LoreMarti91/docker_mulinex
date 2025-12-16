@@ -6,13 +6,13 @@ from pi3hat_moteus_int_msgs.msg import JointsCommand
 import math
 
 class SinTrajectoryNode(Node):
-    def __init__(self, omega=1.0, amplitude=1.0, joint_name='joint1', publish_rate=100.0):
+    def __init__(self, omega=1.0, amplitude=1.0, joint_names=['joint1','joint2'], publish_rate=100.0):
         super().__init__('sin_trajectory_node')
 
         # Store parameters from constructor
         self.omega = float(omega)
         self.amplitude = float(amplitude)
-        self.joint_name = str(joint_name)
+        self.joint_names = joint_names
         self.publish_rate = float(publish_rate)
 
         # Publisher
@@ -24,7 +24,7 @@ class SinTrajectoryNode(Node):
         self.timer = self.create_timer(period, self.timer_callback)
 
         self.get_logger().info(
-            f"Sinusoidal trajectory node started: joint={self.joint_name}, omega={self.omega}, amplitude={self.amplitude}"
+            f"Sinusoidal trajectory node started: joint={self.joint_names}, omega={self.omega}, amplitude={self.amplitude}"
         )
 
     def timer_callback(self):
@@ -38,12 +38,12 @@ class SinTrajectoryNode(Node):
 
         msg = JointsCommand()
         msg.header.stamp = now.to_msg()
-        msg.name = [self.joint_name]
-        msg.position = [position]
-        msg.velocity = [velocity]
-        msg.effort = [effort]
-        msg.kp_scale = [1.0]
-        msg.kd_scale = [1.0]
+        msg.name = self.joint_names
+        msg.position = [position,position]
+        msg.velocity = [velocity,velocity]
+        msg.effort = [effort,effort]
+        msg.kp_scale = [1.0,1.0]
+        msg.kd_scale = [1.0,1.0]
 
         self.pub.publish(msg)
 
@@ -52,7 +52,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     # Example: modify trajectory here
-    node = SinTrajectoryNode(omega=10.0, amplitude=0.5, joint_name='PORCODIO_JOINT', publish_rate=600.0)
+    node = SinTrajectoryNode(omega=1.0, amplitude=0.0, joint_names=["HIP","KNEE"], publish_rate=600.0)
 
     rclpy.spin(node)
     node.destroy_node()
